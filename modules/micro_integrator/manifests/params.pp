@@ -44,20 +44,17 @@ class micro_integrator::params {
   $distribution_path = "${products_dir}/${product}/${product_version}"
   $install_path = "${distribution_path}/${product}-${product_version}"
 
-  # List of files that must contain agent specific configuraitons
-  # if $deployment == "dev" {
-  #   $config_file_list = [
-  #     { "file" => "${install_path}/file1", "key" => "key1", "value" => "value1" },
-  #   ]
-  # }
-  # elsif $deployment == "staging" {
-  #   $config_file_list = [
-  #     { "file" => "${install_path}/file1", "key" => "key1", "value" => "value1" },
-  #   ]
-  # }
-  # elsif $deployment == "production" {
-  #   $config_file_list = [
-  #     { "file" => "${install_path}/file1", "key" => "key1", "value" => "value1" },
-  #   ]
-  # }
+  # ---- Configuration parameters ---- #
+  $hostname = 'localhost'
+  $ports_offset = 0
+
+  $keystore_location = '${carbon.home}/repository/resources/security/wso2carbon.jks'
+  $keystore_password = 'wso2carbon'
+  $keystore_key_alias = 'wso2carbon'
+  $keystore_key_password = 'wso2carbon'
+
+  $trust_store_location = '${carbon.home}/repository/resources/security/client-truststore.jks'
+  $strust_store_password = 'wso2carbon'
+  $trust_store_alias = 'symmetric.key.value'
+  $trust_algorithm = 'JKS'
 }

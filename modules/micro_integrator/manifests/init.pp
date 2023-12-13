@@ -141,7 +141,7 @@ class micro_integrator inherits micro_integrator::params {
     owner   => $user,
     group   => $user_group,
     mode    => '0754',
-    content => template("${module_name}/carbon-home/${start_script_template}.erb")
+    content => template("${module_name}/mi-home/${start_script_template}.erb")
   }
 
   # Copy the unit file required to deploy the server as a service

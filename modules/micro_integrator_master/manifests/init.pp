@@ -53,7 +53,7 @@ class micro_integrator_master inherits micro_integrator_master::params {
     file { "${install_path}/${template}":
       ensure  => file,
       mode    => '0644',
-      content => template("${module_name}/carbon-home/${template}.erb")
+      content => template("${module_name}/mi-home/${template}.erb")
     }
   }
 
