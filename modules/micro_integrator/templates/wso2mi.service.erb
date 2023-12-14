@@ -3,9 +3,9 @@ Description=WSO2 Micro Integrator
 After=network.target
 
 [Service]
-ExecStart=<%=@install_path%>/bin/micro-integrator.sh start
-ExecStop=<%=@install_path%>/bin/micro-integrator.sh stop
-ExecRestart=<%=@install_path%>/bin/micro-integrator.sh restart
+ExecStart=/bin/sh <%=@install_path%>/bin/micro-integrator.sh start
+ExecStop=/bin/sh <%=@install_path%>/bin/micro-integrator.sh stop
+ExecReload=/bin/sh <%=@install_path%>/bin/micro-integrator.sh restart
 PIDFile=<%=@install_path%>/wso2carbon.pid
 User=<%=@user%>
 Group=<%=@user_group%>

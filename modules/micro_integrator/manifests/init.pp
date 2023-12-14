@@ -32,29 +32,7 @@ class micro_integrator inherits micro_integrator::params {
     gid    => $user_group_id,
     home   => "/home/${user}",
     system => true,
-  }
-
-  /*
-  * Java Distribution
-  */
-
-  # Copy JDK distrubution path
-  file { "${$lib_dir}":
-    ensure => directory
-  }
-
-  # Copy JDK to Java distribution path
-  file { "jdk-distribution":
-    path   => "${java_home}.tar.gz",
-    source => "puppet:///modules/common/${jdk_name}.tar.gz",
-  }
-
-  # Unzip distribution
-  exec { "unpack-jdk":
-    command => "tar -zxvf ${java_home}.tar.gz",
-    path    => "/bin/",
-    cwd     => "${lib_dir}",
-    onlyif  => "/usr/bin/test ! -d ${java_home}",
+    require => Group["${user_group}"]
   }
 
   /*
@@ -79,7 +57,7 @@ class micro_integrator inherits micro_integrator::params {
     owner  => $user,
     group  => $user_group,
     mode   => '0644',
-    source => "puppet:///modules/${module_name}/${product_binary}",
+    source => "puppet:///modules/micro_integrator/${product_binary}",
   }
 
   # Stop the existing setup
@@ -125,9 +103,8 @@ class micro_integrator inherits micro_integrator::params {
 
   # Unzip the binary and create setup
   exec { "unzip-update":
-    command     => "unzip -qo ${product_binary}",
+    command     => "sudo unzip -qo ${product_binary}",
     path        => "/usr/bin/",
-    user        => $user,
     cwd         => "${distribution_path}",
     onlyif      => "/usr/bin/test ! -d ${install_path}",
     subscribe   => File["binary"],
@@ -135,13 +112,22 @@ class micro_integrator inherits micro_integrator::params {
     require     => Package['unzip'],
   }
 
-  # Copy wso2server.sh to installed directory
+  # Copy micro-integrator.sh to installed directory
   file { "${install_path}/${start_script_template}":
     ensure  => file,
     owner   => $user,
     group   => $user_group,
     mode    => '0754',
     content => template("${module_name}/mi-home/${start_script_template}.erb")
+  }
+
+  # Copy deployment.toml to installed directory
+  file { "${install_path}/${deployment_toml_template}":
+    ensure  => file,
+    owner   => $user,
+    group   => $user_group,
+    mode    => '0754',
+    content => template("${module_name}/mi-home/${deployment_toml_template}.erb")
   }
 
   # Copy the unit file required to deploy the server as a service
@@ -153,22 +139,4 @@ class micro_integrator inherits micro_integrator::params {
     content => template("${module_name}/${service_name}.service.erb"),
   }
 
-  # Add agent specific file configurations
-  # $config_file_list.each |$config_file| {
-  #   exec { "sed -i -e 's/${config_file['key']}/${config_file['value']}/g' ${config_file['file']}":
-  #     path => "/bin/",
-  #   }
-  # }
-
-  /*
-    Following script can be used to copy file to a given location.
-    This will copy some_file to install_path -> repository.
-    Note: Ensure that file is available in modules -> micro_integrator -> files
-  */
-  # file { "${install_path}/repository/some_file":
-  #   owner  => $user,
-  #   group  => $user_group,
-  #   mode   => '0644',
-  #   source => "puppet:///modules/${module_name}/some_file",
-  # }
 }
