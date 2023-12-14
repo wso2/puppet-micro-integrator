@@ -22,6 +22,9 @@ stage { 'final': }
 Stage['main'] -> Stage['custom'] -> Stage['final']
 
 node default {
+  class { 'java':
+    package => 'openjdk-11-jdk',
+  }
   class { "::${::profile}": }
   class { "::${::profile}::custom":
     stage => 'custom'

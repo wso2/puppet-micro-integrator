@@ -17,24 +17,22 @@
 # Class micro_integrator::params
 # This class includes all the necessary parameters.
 class micro_integrator::params {
+
   $user = 'wso2carbon'
   $user_group = 'wso2'
+  $user_id = 902
+  $user_group_id = 902
+
   $product = 'wso2mi'
-  $product_version = '1.0.0'
+  $product_version = '4.1.0'
   $service_name = "${product}"
 
   # JDK Distributions
-  if $::osfamily == 'redhat' {
-    $lib_dir = "/usr/lib64/wso2"
-  }
-  elsif $::osfamily == 'debian' {
-    $lib_dir = "/usr/lib/wso2"
-  }
-  $jdk_name = 'amazon-corretto-8.202.08.2-linux-x64'
-  $java_home = "${lib_dir}/${jdk_name}"
+  $java_home = "/usr"
 
   # Define the template
   $start_script_template = "bin/micro-integrator.sh"
+  $deployment_toml_template = "conf/deployment.toml"
 
   # Directories
   $products_dir = "/usr/local/wso2"
