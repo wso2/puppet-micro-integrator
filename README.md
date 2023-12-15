@@ -2,24 +2,34 @@
 
 This repository contains the Puppet modules for WSO2 Micro Integrator.
 
-## Quick Start Guide
-1. Download an updated wso2mi-4.1.0.zip pack and copy it to the `<puppet_environment>/modules/micro_integrator/files` directory in the **Puppetmaster**.
+# Quick Start Guide
 
-2. Set up the JDK distribution as follows:
+### Setting up the Puppet Server
+1. Setup a puppet server with puppet v7.27.0. [Guide](https://www.puppet.com/docs/puppet/7/install_puppet.html)
+2. Copy `site.pp` file to `<puppet_environment>/manifests` directory ( Ex:- `/etc/puppetlabs/code/environments/production/manifests` )
+3. Copy `micro_integrator` directory to `<puppet_environment>/modules` directory ( Ex:- `/etc/puppetlabs/code/environments/production/modules` )
+4. Install `puppetlabs-java` module using the following command
+    ```bash
+    sudo puppet module install puppetlabs-java
+    ```
+5. Download and update wso2mi-4.1.0 pack. Then copy it to the `<puppet_environment>/modules/micro_integrator/files` as `wso2mi-4.1.0.zip` directory.
 
-   The Puppet modules for WSO2 products use Eclipse Temurin as the JDK distribution. However, you can use any [supported JDK distribution](https://apim.docs.wso2.com/en/4.1.0/install-and-setup/setup/reference/product-compatibility/#tested-dbmss_1).
-   1. Download Eclipse Temurin JDK for Linux x64 from [here](https://adoptium.net/en-GB/temurin/releases/?variant=openjdk11&os=linux) and copy .tar into the `<puppet_environment>/modules/micro_integrator/files` directory.
-   2. Reassign the *$jdk_name* variable in `<puppet_environment>/modules/micro_integrator/manifests/params.pp` to the name of the downloaded JDK distribution.
-3. Run the Micro Integrator on the **Puppet agents**.
+### Setting up the Puppet Agents
+1. Install and configure your puppet agents with your puppet server. [Guide](https://www.puppet.com/docs/puppet/7/install_agents#install_agents)
+2. Do a dry run to check if everything is working properly.
     ```bash
     export FACTER_profile=micro_integrator
-    puppet agent -vt
+    sudo -E puppet agent -t --noop
+    ```
+3. Run the Micro Integrator on your **Puppet agents**.
+    ```bash
+    export FACTER_profile=micro_integrator
+    sudo -E puppet agent -vt
     ```
 
-## Manifests in a module
-The run stages for Puppet are described in `<puppet_environment>/manifests/site.pp`, and they are of the order Main -> Custom -> Final.
+## Manifest
+The run stages for Puppet are described in `/manifests/site.pp`, and they are of the order Main -> Custom -> Final.
 
-Each Puppet module contains the following .pp files.
 * Main
     * params.pp: Contains all the parameters necessary for the main configuration and template
     * init.pp: Contains the main script of the module.
