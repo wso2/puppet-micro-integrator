@@ -2,7 +2,7 @@
 
 This repository contains the Puppet modules for WSO2 Micro Integrator.
 
-# Quick Start Guide
+## Quick Start Guide
 
 ### Setting up the Puppet Server
 1. Setup a puppet server with puppet v7.27.0. [Guide](https://www.puppet.com/docs/puppet/7/install_puppet.html)
@@ -27,14 +27,7 @@ This repository contains the Puppet modules for WSO2 Micro Integrator.
     sudo -E puppet agent -vt
     ```
 
-## Manifest
-The run stages for Puppet are described in `/manifests/site.pp`, and they are of the order Main -> Custom -> Final.
-
-* Main
-    * params.pp: Contains all the parameters necessary for the main configuration and template
-    * init.pp: Contains the main script of the module.
-* Custom
-    * custom.pp: Used to add custom configurations to the Puppet module.
-* Final
-    * startserver.pp: Runs at the end and starts the server as a linux service.
-    
+## For production deployments
+* Change Java destribution in site.pp file according to your requirement. [Refer](https://forge.puppet.com/modules/puppetlabs/java/readme)
+* Add any configuration changes required to `/modules/micro_integrator/templates/conf/deployment.toml.erb` file and use puppet config management to manage them. ( Facter, Hiera, etc. )
+* You can add any custom code to `/modules/micro_integrator/custom.pp`.
