@@ -22,8 +22,8 @@ class micro_integrator::params {
 
   $user = 'wso2carbon'
   $user_group = 'wso2'
-  $user_id = 902
-  $user_group_id = 902
+  $user_id = 802
+  $user_group_id = 802
 
   $product = 'wso2mi'
   $product_version = '4.1.0'
