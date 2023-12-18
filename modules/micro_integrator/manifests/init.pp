@@ -59,7 +59,7 @@ class micro_integrator inherits micro_integrator::params {
     owner  => $user,
     group  => $user_group,
     mode   => '0644',
-    source => "puppet:///modules/micro_integrator/${product_binary}",
+    source => "puppet:///modules/${module_name}/${product_binary}",
   }
 
   # Stop the existing setup
@@ -128,7 +128,7 @@ class micro_integrator inherits micro_integrator::params {
     ensure  => file,
     owner   => $user,
     group   => $user_group,
-    mode    => '0754',
+    mode    => '0644',
     content => template("${module_name}/mi-home/${deployment_toml_template}.erb")
   }
 
@@ -140,4 +140,23 @@ class micro_integrator inherits micro_integrator::params {
     mode    => '0754',
     content => template("${module_name}/${service_name}.service.erb"),
   }
+
+  # Add agent specific file configurations
+  # $config_file_list.each |$config_file| {
+  #   exec { "sed -i -e 's/${config_file['key']}/${config_file['value']}/g' ${config_file['file']}":
+  #     path => "/bin/",
+  #   }
+  # }
+
+  /*
+    Following script can be used to copy file to a given location.
+    This will copy some_file to install_path -> repository.
+    Note: Ensure that file is available in modules -> micro_integrator -> files
+  */
+  # file { "${install_path}/repository/some_file":
+  #   owner  => $user,
+  #   group  => $user_group,
+  #   mode   => '0644',
+  #   source => "puppet:///modules/${module_name}/some_file",
+  # }
 }
