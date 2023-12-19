@@ -114,6 +114,36 @@ class micro_integrator inherits micro_integrator::params {
     require     => Package['unzip'],
   }
 
+  # Copy configuration changes to the installed directory
+  $template_list.each |String $template| {
+    file { "${install_path}/${template}":
+      ensure  => file,
+      mode    => '0644',
+      content => template("${module_name}/mi-home/${template}.erb")
+    }
+  }
+
+  # Copy files to MI home directory 
+  $file_list.each | String $file | {
+    file { "${install_path}/${file}":
+      ensure => present,
+      owner => $user,
+      recurse => remote,
+      group => $user_group,
+      mode => '0755',
+      source => "puppet:///modules/${module_name}/${file}"
+    }
+  }
+
+  # Delete files from MI home directory
+  $file_removelist.each | String $removefile | {
+    file { "${install_path}/${removefile}":
+      ensure => absent,
+      owner => $user,
+      group => $user_group
+    }
+  }
+
   # Copy micro-integrator.sh to installed directory
   file { "${install_path}/${start_script_template}":
     ensure  => file,
@@ -121,15 +151,6 @@ class micro_integrator inherits micro_integrator::params {
     group   => $user_group,
     mode    => '0754',
     content => template("${module_name}/mi-home/${start_script_template}.erb")
-  }
-
-  # Copy deployment.toml to installed directory
-  file { "${install_path}/${deployment_toml_template}":
-    ensure  => file,
-    owner   => $user,
-    group   => $user_group,
-    mode    => '0644',
-    content => template("${module_name}/mi-home/${deployment_toml_template}.erb")
   }
 
   # Copy the unit file required to deploy the server as a service

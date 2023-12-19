@@ -29,9 +29,18 @@ class micro_integrator::params {
   $product_version = '4.1.0'
   $service_name = "${product}"
 
-  # Define the template
   $start_script_template = "bin/micro-integrator.sh"
-  $deployment_toml_template = "conf/deployment.toml"
+
+  # Define the templates that should be copied to the server
+  $template_list = [
+    'conf/deployment.toml'
+  ]
+
+  # Define the files that should be copied to the server
+  $file_list = []
+
+  # Define the files that should be removed from the server
+  $file_removelist = []
 
   # Directories
   $products_dir = "/usr/local/wso2"
