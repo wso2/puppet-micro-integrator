@@ -26,7 +26,7 @@ class micro_integrator::params {
   $user_group_id = 802
 
   $product = 'wso2mi'
-  $product_version = '4.1.0'
+  $product_version = '4.2.0'
   $service_name = "${product}"
 
   # Define the template
@@ -44,15 +44,15 @@ class micro_integrator::params {
 
   # ---- Configuration parameters for deployment.toml ---- #
   $hostname = 'localhost'
-  $ports_offset = 0
+  $ports_offset = 10
 
-  $keystore_location = '${carbon.home}/repository/resources/security/wso2carbon.jks'
+  $keystore_location = 'repository/resources/security/wso2carbon.jks'
   $keystore_password = 'wso2carbon'
-  $keystore_key_alias = 'wso2carbon'
+  $keystore_alias = 'wso2carbon'
   $keystore_key_password = 'wso2carbon'
 
-  $trust_store_location = '${carbon.home}/repository/resources/security/client-truststore.jks'
-  $strust_store_password = 'wso2carbon'
-  $trust_store_alias = 'symmetric.key.value'
-  $trust_algorithm = 'JKS'
+  $truststore_location = 'repository/resources/security/client-truststore.jks'
+  $truststore_password = 'wso2carbon'
+  $truststore_alias = 'symmetric.key.value'
+  $truststore_algorithm = 'JKS'
 }

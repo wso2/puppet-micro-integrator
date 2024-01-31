@@ -139,10 +139,17 @@ do
           CMD="version"
     elif [ "$c" = "--restart" ] || [ "$c" = "-restart" ] || [ "$c" = "restart" ]; then
           CMD="restart"
+    elif [ "$c" = "--car" ] || [ "$c" = "-car" ] || [ "$c" = "car" ]; then
+          ARGUMENT="car"
+          OPTARG="$2"
     else
         args="$args $c"
     fi
 done
+
+if [ "$ARGUMENT" = "car" ]; then
+  CAR_NAME="$OPTARG"
+fi
 
 if [ "$CMD" = "--debug" ]; then
   if [ "$PORT" = "" ]; then
@@ -195,9 +202,10 @@ fi
 # ---------- Handle the SSL Issue with proper JDK version --------------------
 java_version=$("$JAVACMD" -version 2>&1 | awk -F '"' '/version/ {print $2}')
 java_version_formatted=$(echo "$java_version" | awk -F. '{printf("%02d%02d",$1,$2);}')
-if [ $java_version_formatted -lt 0107 ] || [ $java_version_formatted -gt 1100 ]; then
+if [ $java_version_formatted -lt 1100 ] || [ $java_version_formatted -gt 1700 ]; then
    echo " Starting WSO2 MI (in unsupported JDK)"
-   echo " [ERROR] MI is supported only on JDK 1.8, 9, 10 and 11"
+   echo " [ERROR] WSO2 MI is supported only between JDK 11 and JDK 17"
+   exit 0
 fi
 
 CARBON_XBOOTCLASSPATH=""
@@ -275,7 +283,7 @@ fi
 JAVA_VER_BASED_OPTS=""
 
 if [ $java_version_formatted -ge 1100 ]; then
-    JAVA_VER_BASED_OPTS="--add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens java.rmi/sun.rmi.transport=ALL-UNNAMED"
+    JAVA_VER_BASED_OPTS="--add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.xml/com.sun.org.apache.xerces.internal.util=ALL-UNNAMED --add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens java.rmi/sun.rmi.transport=ALL-UNNAMED"
 fi
 
 while [ "$status" = "$START_EXIT_STATUS" ]
@@ -296,6 +304,7 @@ do
     -Dqpid.conf="/conf/advanced/" \
     $JAVA_VER_BASED_OPTS \
     -Dcarbon.home="$CARBON_HOME" \
+    -Dlogfiles.home="$CARBON_HOME/repository/logs" \
     -Dlogger.server.name="micro-integrator" \
     -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
     -Dcarbon.config.dir.path="$CARBON_HOME/conf" \
@@ -319,6 +328,8 @@ do
     -Djava.security.egd=file:/dev/./urandom \
     -Dfile.encoding=UTF8 \
     -Djava.net.preferIPv4Stack=true \
+    -Djdk.util.zip.disableZip64ExtraFieldValidation=true \
+    -Djdk.nio.zipfs.allowDotZipEntry=true \
     -DNonRegistryMode=true \
     -DNonUserCoreMode=true \
     -Dcom.ibm.cacheLocalHost=true \
@@ -329,7 +340,10 @@ do
     -DavoidConfigHashRead=true \
     -Dproperties.file.path=default \
     -DenableReadinessProbe=true \
+    -DenableLivenessProbe=true \
     -DenableManagementApi=true \
+    -DskipStartupExtensions=false \
+    -Dautomation.mode.seq.car.name="$CAR_NAME" \
     -Dlog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector \
     -Dorg.ops4j.pax.logging.logReaderEnabled=false \
     -Dorg.ops4j.pax.logging.eventAdminEnabled=false \
