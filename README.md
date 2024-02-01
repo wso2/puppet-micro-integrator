@@ -12,18 +12,16 @@ This repository contains the Puppet modules for WSO2 Micro Integrator.
     ```bash
     sudo puppet module install puppetlabs-java
     ```
-5. Download and update wso2mi-4.1.0 pack. Then copy it to the `<puppet_environment>/modules/micro_integrator/files` as `wso2mi-4.1.0.zip` directory.
+5. Download and update wso2mi-4.2.0 pack. Then copy it to the `<puppet_environment>/modules/micro_integrator/files` as `wso2mi-4.2.0.zip` directory.
 
 ### Setting up the Puppet Agents
 1. Install and configure your puppet agents with your puppet server. [Guide](https://www.puppet.com/docs/puppet/7/install_agents#install_agents)
 2. Do a dry run to check if everything is working properly.
     ```bash
-    export FACTER_profile=micro_integrator
     sudo -E puppet agent -t --noop
     ```
 3. Run the Micro Integrator on your **Puppet agents**.
     ```bash
-    export FACTER_profile=micro_integrator
     sudo -E puppet agent -vt
     ```
 
