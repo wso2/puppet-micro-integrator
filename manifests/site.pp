@@ -27,11 +27,11 @@ node default {
   class { 'java':
     package => 'openjdk-11-jdk',
   }
-  class { "::micro_integrator": }
-  class { "::micro_integrator::custom":
+  class { "::${::profile}": }
+  class { "::${::profile}::custom":
     stage => 'custom'
   }
-  class { "::micro_integrator::startserver":
+  class { "::${::profile}::startserver":
     stage => 'final'
   }
 }
