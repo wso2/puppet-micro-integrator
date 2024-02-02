@@ -151,7 +151,7 @@ class mi_dashboard inherits mi_dashboard::params {
   /*
     Following script can be used to copy file to a given location.
     This will copy some_file to install_path -> repository.
-    Note: Ensure that file is available in modules -> micro_integrator -> files
+    Note: Ensure that file is available in modules -> mi_dashboard -> files
   */
   # file { "${install_path}/repository/some_file":
   #   owner  => $user,
