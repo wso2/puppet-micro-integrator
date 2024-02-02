@@ -18,7 +18,7 @@
 
 # Class mi_dashboard::startserver
 # Starts the server as a service in the final stage.
-class mi_dashboard::startserver inherits dashboard::params {
+class mi_dashboard::startserver inherits mi_dashboard::params {
 
   exec { 'daemon-reload':
     command => "systemctl daemon-reload",
