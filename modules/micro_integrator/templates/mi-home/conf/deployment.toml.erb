@@ -13,10 +13,11 @@ key_password = "<%= @keystore_key_password %>"
 
 [truststore]
 file_name = "<%= @truststore_location %>"
-password = "<%= @keystore_password %>"
-alias = "<%= @keystore_alias %>"
-algorithm = "<%= @keystore_algorithm %>"
+password = "<%= @truststore_password %>"
+alias = "<%= @truststore_alias %>"
+algorithm = "<%= @truststore_algorithm %>"
 
+## Uncomment if you are setting up MI Dashboard
 # [dashboard_config]
 # dashboard_url = "https://localhost:9743/dashboard/api/"
 
@@ -113,6 +114,3 @@ algorithm = "<%= @keystore_algorithm %>"
 # enable = true
 # username = "admin"
 # password = "admin"
-
-# [dashboard_config]
-# dashboard_url = "https://localhost:9743/dashboard/api/"

@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------------
-#  Copyright (c) 2023, WSO2 LLC. (http://www.wso2.org) All Rights Reserved.
+#  Copyright (c) 2024, WSO2 LLC. (http://www.wso2.org) All Rights Reserved.
 #
 #  WSO2 LLC. licenses this file to you under the Apache License,
 #  Version 2.0 (the "License"); you may not use this file except
@@ -16,21 +16,21 @@
 # under the License.
 #----------------------------------------------------------------------------
 
-# Class micro_integrator::params
+# Class mi_dashboard::params
 # This class includes all the necessary parameters.
-class micro_integrator::params {
+class mi_dashboard::params {
 
   $user = 'wso2carbon'
   $user_group = 'wso2'
   $user_id = 802
   $user_group_id = 802
 
-  $product = 'wso2mi'
+  $product = 'wso2mi-dashboard'
   $product_version = '4.2.0'
   $service_name = "${product}"
 
   # Define the template
-  $start_script_template = "bin/micro-integrator.sh"
+  $start_script_template = "bin/dashboard.sh"
   $deployment_toml_template = "conf/deployment.toml"
 
   # Directories
@@ -43,16 +43,14 @@ class micro_integrator::params {
   $install_path = "${distribution_path}/${product}-${product_version}"
 
   # ---- Configuration parameters for deployment.toml ---- #
-  $hostname = 'localhost'
-  $ports_offset = 10
+  $server_config_port = 9743
+  
+  $heartbeat_config_pool_size = 15
 
-  $keystore_location = 'repository/resources/security/wso2carbon.jks'
+  $mi_user_store_username = 'admin'
+  $mi_user_store_password = 'admin'
+  
+  $keystore_file_name = 'conf/security/dashboard.jks'
   $keystore_password = 'wso2carbon'
-  $keystore_alias = 'wso2carbon'
   $keystore_key_password = 'wso2carbon'
-
-  $truststore_location = 'repository/resources/security/client-truststore.jks'
-  $truststore_password = 'wso2carbon'
-  $truststore_alias = 'symmetric.key.value'
-  $truststore_algorithm = 'JKS'
 }
