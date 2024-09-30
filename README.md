@@ -34,6 +34,6 @@ This repository contains the Puppet modules for WSO2 Micro Integrator.
     ```
 
 ## For production deployments
-* Change Java destribution in site.pp file according to your requirement. [Refer](https://forge.puppet.com/modules/puppetlabs/java/readme)
+* Change Java distribution in site.pp file according to your requirement. [Refer](https://forge.puppet.com/modules/puppetlabs/java/readme)
 * Add any configuration changes required to `/modules/micro_integrator/templates/conf/deployment.toml.erb` file and use puppet config management to manage them. ( Facter, Hiera, etc. )
 * You can add any custom code to `/modules/micro_integrator/custom.pp`.
