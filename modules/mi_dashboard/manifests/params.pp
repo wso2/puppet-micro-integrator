@@ -26,7 +26,7 @@ class mi_dashboard::params {
   $user_group_id = 802
 
   $product = 'wso2mi-dashboard'
-  $product_version = '4.2.0'
+  $product_version = '4.3.0'
   $service_name = "${product}"
 
   # Define the template
