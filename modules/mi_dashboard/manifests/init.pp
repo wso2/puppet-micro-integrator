@@ -114,6 +114,13 @@ class mi_dashboard inherits mi_dashboard::params {
     require     => Package['unzip'],
   }
 
+  # Normalize the extracted ICP directory name for the service
+  exec { 'rename-dashboard-dir':
+    command => "mv ${install_home}/${product_version}/integration-control-plane-${product_version} ${install_home}/${product_version}/${archive_name_base}",
+    unless  => "test -d ${install_home}/${product_version}/${archive_name_base}",
+    require => Exec['unzip-update'],
+  }
+
   # Copy dashboard.sh to installed directory
   file { "${install_path}/${start_script_template}":
     ensure  => file,
