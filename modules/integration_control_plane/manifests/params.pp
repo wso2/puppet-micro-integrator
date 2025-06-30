@@ -16,41 +16,40 @@
 # under the License.
 #----------------------------------------------------------------------------
 
-# Class mi_dashboard::params
-# This class includes all the necessary parameters.
-class mi_dashboard::params {
+class integration_control_plane::params {
+  ## User and group settings
+  $user           = 'wso2carbon'
+  $user_group     = 'wso2'
+  $user_id        = 802
+  $user_group_id  = 802
 
-  $user = 'wso2carbon'
-  $user_group = 'wso2'
-  $user_id = 802
-  $user_group_id = 802
+  ## ICP product identifiers
+  $product         = 'wso2-integration-control-plane'
+  $product_version = '1.1.0'
+  $service_name    = $product
 
-  $product = 'wso2mi-dashboard'
-  $product_version = '4.3.0'
-  $service_name = "${product}"
+  ## Templates under templates/icp-home/
+  $start_script_template    = 'bin/dashboard.sh'
+  $deployment_toml_template = 'conf/deployment.toml'
 
-  # Define the template
-  $start_script_template = "bin/dashboard.sh"
-  $deployment_toml_template = "conf/deployment.toml"
+  ## Directory locations
+  $products_dir = '/usr/local/wso2'
+  $java_home    = '/usr'
 
-  # Directories
-  $products_dir = "/usr/local/wso2"
-  $java_home = "/usr"
-
-  # Product and installation information
-  $product_binary = "${product}-${product_version}.zip"
+  ## Archive and install paths
+  $product_binary    = "${product}-${product_version}.zip"
   $distribution_path = "${products_dir}/${product}/${product_version}"
-  $install_path = "${distribution_path}/${product}-${product_version}"
+  $install_dir_name  = "${product}-${product_version}"
+  $install_path      = "${distribution_path}/${install_dir_name}"
 
-  # ---- Configuration parameters for deployment.toml ---- #
-  $server_config_port = 9743
-  
+  ## Config params
+  $server_config_port         = 9743
   $heartbeat_config_pool_size = 15
 
   $mi_user_store_username = 'admin'
   $mi_user_store_password = 'admin'
-  
-  $keystore_file_name = 'conf/security/dashboard.jks'
-  $keystore_password = 'wso2carbon'
+
+  $keystore_file_name    = 'conf/security/dashboard.jks'
+  $keystore_password     = 'wso2carbon'
   $keystore_key_password = 'wso2carbon'
 }
