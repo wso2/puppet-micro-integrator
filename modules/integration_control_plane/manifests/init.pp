@@ -88,7 +88,9 @@ class integration_control_plane inherits integration_control_plane::params {
   }
 
   # 6. Install unzip if needed and unpack
-  package { 'unzip': ensure => installed }
+  package { 'unzip':
+    ensure => installed,
+  }
   exec { 'unzip-icp':
     command     => "unzip -qo ${product_binary}",
     cwd         => $distribution_path,
@@ -99,7 +101,15 @@ class integration_control_plane inherits integration_control_plane::params {
     require     => Package['unzip'],
   }
 
-  # 7. Deploy start‐up script & deployment.toml via templates
+  file { $install_path:
+    ensure  => directory,
+    recurse => true,
+    owner   => $user,
+    group   => $user_group,
+    require => Exec['unzip-icp'],
+  }
+
+  # 7. Deploy your startup script & deployment.toml
   file { "${install_path}/${start_script_template}":
     ensure  => file,
     owner   => $user,
@@ -115,12 +125,30 @@ class integration_control_plane inherits integration_control_plane::params {
     content => template("${module_name}/icp-home/${deployment_toml_template}.erb"),
   }
 
-  # 8. Install systemd unit for easy start/stop
+  # 8. Place the systemd unit and reload daemon
   file { "/etc/systemd/system/${service_name}.service":
     ensure  => file,
     owner   => 'root',
     group   => 'root',
     mode    => '0754',
     content => template("${module_name}/${service_name}.service.erb"),
+    notify  => Exec['systemd-daemon-reload'],
+  }
+  exec { 'systemd-daemon-reload':
+    command     => '/bin/systemctl daemon-reload',
+    path        => '/bin:/usr/bin',
+    refreshonly => true,
+  }
+
+  # 9. Ensure the ICP service is enabled and running
+  service { $service_name:
+    ensure    => running,
+    enable    => true,
+    provider  => 'systemd',
+    subscribe => [
+      File["/etc/systemd/system/${service_name}.service"],
+      File["${install_path}/${start_script_template}"],
+      File["${install_path}/${deployment_toml_template}"],
+    ],
   }
 }
