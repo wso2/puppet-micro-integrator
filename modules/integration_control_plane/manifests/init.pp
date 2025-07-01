@@ -125,24 +125,13 @@ class integration_control_plane inherits integration_control_plane::params {
     content => template("${module_name}/icp-home/${deployment_toml_template}.erb"),
   }
 
-  # Ensure the logs directory exists
+ # Ensure the logs directory exists
   file { "${install_path}/logs":
     ensure  => directory,
     owner   => $user,
     group   => $user_group,
     mode    => '0755',
     require => File[$install_path], # Ensure base install path is managed first
-  }
-
-  # Deploy secret-conf.properties for Secure Vault
-  file { "${install_path}/conf/security/wso2.securevault.secret-conf.properties":
-    ensure  => file,
-    owner   => $user,
-    group   => $user_group,
-    mode    => '0644',
-    content => template("${module_name}/icp-home/conf/security/secret-conf.properties.erb"),
-    require => File[$install_path], # Depends on the base install path
-    notify  => Service[$service_name],      # Restart service if this file changes
   }
 
   # 8. Place the systemd unit and reload daemon
