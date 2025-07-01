@@ -83,27 +83,90 @@ if [ "$CMD" = "--debug" ]; then
   echo "Please start the remote debugging client to continue..."
 elif [ "$CMD" = "start" ]; then
   if [ -e "$DASHBOARD_HOME/runtime.pid" ]; then
-    if ps -p $PID > /dev/null ; then
-      echo "Process is already running"
+    _pid_to_check=$(cat "$DASHBOARD_HOME/runtime.pid")
+    if ps -p "$_pid_to_check" > /dev/null ; then
+      echo "WSO2 Integration Control Plane is already running (PID: $_pid_to_check)."
       exit 0
+    else
+      echo "Removing stale PID file ($DASHBOARD_HOME/runtime.pid) as process $_pid_to_check is not running."
+      rm -f "$DASHBOARD_HOME/runtime.pid"
     fi
   fi
-  # using nohup bash to avoid errors in Solaris
-  nohup bash $DASHBOARD_HOME/bin/dashboard.sh $args > /dev/null 2>&1 &
+
+  # Create logs directory if it doesn't exist (basic check, Puppet should handle robust creation)
+  if [ ! -d "$DASHBOARD_HOME/logs" ]; then
+    mkdir "$DASHBOARD_HOME/logs"
+  fi
+
+  # Launch the Java process in the background
+  nohup "$JAVACMD" \
+    $JAVA_OPTS \
+    -Dlog4j.configurationFile="$DASHBOARD_HOME/conf/log4j2.properties" \
+    -Dwso2.runtime.path="$DASHBOARD_HOME" \
+    -Ddashboard.home="$DASHBOARD_HOME" \
+    -cp "$CARBON_CLASSPATH" \
+    org.wso2.ei.dashboard.bootstrap.Bootstrap $args >> "$DASHBOARD_HOME/logs/wso2carbon.log" 2>&1 &
+
+  # Capture the PID of the Java process
+  JAVA_PROCESS_PID=$!
+  echo $JAVA_PROCESS_PID > "$DASHBOARD_HOME/runtime.pid"
+
+  # Give it a moment to see if it starts successfully
+  sleep 5
+  if ps -p $JAVA_PROCESS_PID > /dev/null ; then
+    echo "WSO2 Integration Control Plane started successfully (PID: $JAVA_PROCESS_PID)."
+    echo "Logs available at $DASHBOARD_HOME/logs/wso2carbon.log"
+  else
+    echo "Failed to start WSO2 Integration Control Plane. Check logs at $DASHBOARD_HOME/logs/wso2carbon.log"
+    # Remove PID file if startup failed
+    rm -f "$DASHBOARD_HOME/runtime.pid"
+    exit 1
+  fi
   exit 0
 elif [ "$CMD" = "stop" ]; then
-  kill -term `cat $DASHBOARD_HOME/runtime.pid`
+  if [ -e "$DASHBOARD_HOME/runtime.pid" ]; then
+    PID_TO_KILL=$(cat "$DASHBOARD_HOME/runtime.pid")
+    if ps -p $PID_TO_KILL > /dev/null ; then
+      echo "Stopping WSO2 Integration Control Plane (PID: $PID_TO_KILL)..."
+      kill -term $PID_TO_KILL
+      # Wait for process to stop
+      count=0
+      while ps -p $PID_TO_KILL > /dev/null ; do
+        sleep 1
+        count=$((count+1))
+        if [ $count -gt 60 ]; then # Timeout after 60 seconds
+          echo "WSO2 Integration Control Plane (PID: $PID_TO_KILL) did not stop after 60 seconds. Sending SIGKILL."
+          kill -9 $PID_TO_KILL
+          break
+        fi
+      done
+      # Remove PID file after successful stop or kill
+      if ! ps -p $PID_TO_KILL > /dev/null ; then
+         echo "WSO2 Integration Control Plane stopped."
+         rm -f "$DASHBOARD_HOME/runtime.pid"
+      fi
+    else
+      echo "WSO2 Integration Control Plane is not running (no process found for PID $PID_TO_KILL)."
+      rm -f "$DASHBOARD_HOME/runtime.pid" # Remove stale PID file
+    fi
+  else
+    echo "WSO2 Integration Control Plane is not running (no PID file found)."
+  fi
   exit 0
 elif [ "$CMD" = "restart" ]; then
-  kill -term `cat $DASHBOARD_HOME/runtime.pid`
-  process_status=0
-  pid=`cat $DASHBOARD_HOME/runtime.pid`
-  while [ "$process_status" -eq "0" ]; do
+  # Call stop
+  sh "$PRG" stop
+  # Wait a bit for stop to complete
+  sleep_count=0
+  while [ -e "$DASHBOARD_HOME/runtime.pid" ] && [ "$sleep_count" -lt 10 ]; do
     sleep 1
-    ps -p$pid > /dev/null 2>&1
-    process_status=$?
+    sleep_count=$((sleep_count + 1))
   done
-  nohup bash $DASHBOARD_HOME/bin/dashboard.sh $args > /dev/null 2>&1 &
+  if [ -e "$DASHBOARD_HOME/runtime.pid" ]; then
+      echo "Warning: PID file still exists after stop attempt during restart. Proceeding with start."
+  fi
+  # Call start
+  sh "$PRG" start $args
   exit 0
 elif [ "$CMD" = "version" ]; then
   cat $DASHBOARD_HOME/bin/version.txt

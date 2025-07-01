@@ -125,6 +125,15 @@ class integration_control_plane inherits integration_control_plane::params {
     content => template("${module_name}/icp-home/${deployment_toml_template}.erb"),
   }
 
+ # Ensure the logs directory exists
+  file { "${install_path}/logs":
+    ensure  => directory,
+    owner   => $user,
+    group   => $user_group,
+    mode    => '0755',
+    require => File[$install_path], # Ensure base install path is managed first
+  }
+
   # 8. Place the systemd unit and reload daemon
   file { "/etc/systemd/system/${service_name}.service":
     ensure  => file,
