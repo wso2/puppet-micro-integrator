@@ -25,6 +25,13 @@ PRGDIR=`dirname "$PRG"`
 [ -z "$DASHBOARD_HOME" ] && DASHBOARD_HOME=`cd "$PRGDIR/.." ; pwd`
 export DASHBOARD_HOME=$DASHBOARD_HOME
 
+# ICP scripts expect CARBON_HOME to be defined for configuration loading.
+# Set it to DASHBOARD_HOME when not already provided. This mirrors the
+# behaviour of other WSO2 distributions and avoids startup errors where the
+# configuration is not found and Java exits with a NullPointerException.
+[ -z "$CARBON_HOME" ] && CARBON_HOME="$DASHBOARD_HOME"
+export CARBON_HOME
+
 for t in "$DASHBOARD_HOME"/lib/*.jar; do
   CARBON_CLASSPATH="$CARBON_CLASSPATH":$t
 done
@@ -102,6 +109,7 @@ elif [ "$CMD" = "start" ]; then
   nohup "$JAVACMD" \
     $JAVA_OPTS \
     -Dlog4j.configurationFile="$DASHBOARD_HOME/conf/log4j2.properties" \
+    -Dcarbon.home="$CARBON_HOME" \
     -Dwso2.runtime.path="$DASHBOARD_HOME" \
     -Ddashboard.home="$DASHBOARD_HOME" \
     -cp "$CARBON_CLASSPATH" \
@@ -182,6 +190,7 @@ fi
 java \
   $JAVA_OPTS \
   -Dlog4j.configurationFile="$DASHBOARD_HOME/conf/log4j2.properties" \
+  -Dcarbon.home="$CARBON_HOME" \
   -Dwso2.runtime.path="$DASHBOARD_HOME" \
   -Ddashboard.home="$DASHBOARD_HOME" \
   -cp "$CARBON_CLASSPATH" \

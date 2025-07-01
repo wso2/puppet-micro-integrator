@@ -46,5 +46,16 @@ class integration_control_plane::params {
   $keystore_file_name       = 'conf/security/dashboard.jks'
   $keystore_password        = 'wso2carbon'
   $keystore_key_password    = 'wso2carbon'
+
+  # Additional credentials introduced in later ICP versions
+  $mi_super_admin_username     = 'admin'
+  $mi_super_admin_password     = 'admin'
+  $bal_service_account_username = 'bal_admin'
+  $bal_service_account_password = 'bal_secret'
+  $si_service_account_username  = 'admin'
+  $si_service_account_password  = 'admin'
+  $truststore_file_name         = 'conf/security/client-truststore.jks'
+  $truststore_password          = 'wso2carbon'
+  $make_non_admin_users_read_only = false
 }
 
