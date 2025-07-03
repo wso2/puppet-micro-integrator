@@ -16,8 +16,19 @@
 # under the License.
 #----------------------------------------------------------------------------
 
-# Class: mi_dashboard::custom
-# This class is reserved to run custom user code before starting the server.
-class mi_dashboard::custom {
-  # resources
+# Class integration_control_plane::startserver
+# Starts the server as a service in the final stage.
+class integration_control_plane::startserver inherits integration_control_plane::params {
+
+  exec { 'daemon-reload':
+    command => "systemctl daemon-reload",
+    path    => "/bin/",
+  }
+
+  # Start the service
+  service { $service_name:
+    enable    => true,
+    ensure    => running,
+    subscribe => File["binary"],
+  }
 }

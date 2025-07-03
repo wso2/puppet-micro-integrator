@@ -16,19 +16,8 @@
 # under the License.
 #----------------------------------------------------------------------------
 
-# Class mi_dashboard::startserver
-# Starts the server as a service in the final stage.
-class mi_dashboard::startserver inherits mi_dashboard::params {
-
-  exec { 'daemon-reload':
-    command => "systemctl daemon-reload",
-    path    => "/bin/",
-  }
-
-  # Start the service
-  service { $service_name:
-    enable    => true,
-    ensure    => running,
-    subscribe => File["binary"],
-  }
+# Class: integration_control_plane::custom
+# This class is reserved to run custom user code before starting the server.
+class integration_control_plane::custom {
+  # resources
 }
