@@ -22,7 +22,7 @@ class integration_control_plane::params {
   $user_id                  = 802
   $user_group_id            = 802
   $product                  = 'wso2-integration-control-plane'
-  $product_version          = '1.1.0'
+  $product_version          = '1.0.0'
   $service_name             = $product
 
   # Scripts & templates
