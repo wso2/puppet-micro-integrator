@@ -20,13 +20,6 @@
 # Init class of Micro Integrator
 class micro_integrator inherits micro_integrator::params {
 
-  # Create wso2 group
-  group { $user_group:
-    ensure => present,
-    gid    => $user_group_id,
-    system => true,
-  }
-
   # Create wso2 user
   user { $user:
     ensure => present,
