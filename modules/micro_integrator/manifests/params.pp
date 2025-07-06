@@ -16,43 +16,42 @@
 # under the License.
 #----------------------------------------------------------------------------
 
-# Class micro_integrator::params
-# This class includes all the necessary parameters.
+# micro_integrator::params — central defaults
 class micro_integrator::params {
 
-  $user = 'wso2carbon'
-  $user_group = 'wso2'
-  $user_id = 802
-  $user_group_id = 802
+  # Service account
+  $user            = 'wso2carbon'
+  $user_group      = 'wso2'
+  $user_id         = 802
+  $user_group_id   = 802
 
-  $product = 'wso2mi'
+  # Product basics
+  $product         = 'wso2mi'
   $product_version = '4.4.0'
-  $service_name = "${product}"
+  $service_name    = $product        # systemd unit name
 
-  # Define the template
-  $start_script_template = "bin/micro-integrator.sh"
-  $deployment_toml_template = "conf/deployment.toml"
+  # Templates inside the ZIP
+  $start_script_template    = 'bin/micro-integrator.sh'
+  $deployment_toml_template = 'conf/deployment.toml'
 
   # Directories
-  $products_dir = "/usr/local/wso2"
-  $java_home = "/usr"
+  $products_dir  = '/usr/local/wso2'
+  $java_home     = '/usr'
 
-  # Product and installation information
-  $product_binary = "${product}-${product_version}.zip"
+  # Derived paths
+  $product_binary    = "${product}-${product_version}.zip"
   $distribution_path = "${products_dir}/${product}/${product_version}"
-  $install_path = "${distribution_path}/${product}-${product_version}"
+  $install_path      = "${distribution_path}/${product}-${product_version}"
 
-  # ---- Configuration parameters for deployment.toml ---- #
-  $hostname = 'localhost'
-  $ports_offset = 10
-
-  $keystore_location = 'repository/resources/security/wso2carbon.jks'
-  $keystore_password = 'wso2carbon'
-  $keystore_alias = 'wso2carbon'
+  # ---- Example TOML defaults (override via Hiera)
+  $hostname              = 'localhost'
+  $ports_offset          = 10
+  $keystore_location     = 'repository/resources/security/wso2carbon.jks'
+  $keystore_password     = 'wso2carbon'
+  $keystore_alias        = 'wso2carbon'
   $keystore_key_password = 'wso2carbon'
-
-  $truststore_location = 'repository/resources/security/client-truststore.jks'
-  $truststore_password = 'wso2carbon'
-  $truststore_alias = 'symmetric.key.value'
-  $truststore_algorithm = 'JKS'
+  $truststore_location   = 'repository/resources/security/client-truststore.jks'
+  $truststore_password   = 'wso2carbon'
+  $truststore_alias      = 'symmetric.key.value'
+  $truststore_algorithm  = 'JKS'
 }

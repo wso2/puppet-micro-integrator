@@ -31,7 +31,4 @@ node default {
   class { "::${::profile}::custom":
     stage => 'custom'
   }
-  class { "::${::profile}::startserver":
-    stage => 'final'
-  }
 }
