@@ -15,184 +15,141 @@
 # specific language governing permissions and limitations
 # under the License.
 #----------------------------------------------------------------------------
+
 # Class: micro_integrator
-class micro_integrator (
-  String  $user               = 'wso2carbon',
-  String  $user_group         = 'wso2',
-  Integer $user_id            = 802,
-  Integer $user_group_id      = 802,
-  String  $products_dir       = '/usr/local/wso2',
-  String  $product            = 'wso2mi',
-  String  $product_version    = '4.4.0',
-  Boolean $manage_user        = true,
-  Boolean $manage_group       = true,
-) inherits micro_integrator::params {
+# Init class of Micro Integrator
+class micro_integrator inherits micro_integrator::params {
 
-  $module_name            = 'micro_integrator'
-  $distribution_path      = "${products_dir}/${product}/${product_version}"
-  $install_path           = "${distribution_path}/${product}-${product_version}"
-  $product_binary         = "${product}-${product_version}.zip"
-  $start_script_template  = 'micro-integrator.sh'
-  $deployment_toml_template = 'deployment.toml'
-  $service_name           = 'wso2mi'
-
-  # ---------------------------------------------------------------------------
-  # 1. Service account
-  # ---------------------------------------------------------------------------
-  if $manage_group {
-    group { $user_group:
-      ensure => present,
-      gid    => $user_group_id,
-      system => true,
-    }
+  # Create wso2 user
+  user { $user:
+    ensure => present,
+    uid    => $user_id,
+    gid    => $user_group_id,
+    home   => "/home/${user}",
+    system => true,
+    require => Group["${user_group}"]
   }
 
-  if $manage_user {
-    user { $user:
-      ensure  => present,
-      uid     => $user_id,
-      gid     => $user_group_id,
-      home    => "/home/${user}",
-      system  => true,
-      require => Group[$user_group],
-    }
-  }
+  /*
+  * WSO2 Distribution
+  */
 
-  # ---------------------------------------------------------------------------
-  # 2. Directory structure & ownership
-  # ---------------------------------------------------------------------------
-  file { [
-    $products_dir,
+  # Change the ownership of the installation directory to specified user & group
+  file { [  "${products_dir}",
     "${products_dir}/${product}",
-    $distribution_path,
-    "${distribution_path}/backup",
-  ]:
-    ensure  => directory,
+    "${distribution_path}",
+    "${distribution_path}/backup" ]:
+    ensure => 'directory',
     owner   => $user,
     group   => $user_group,
-    recurse => true,
-    require => [ User[$user], Group[$user_group] ],
+    require => [ User[$user], Group[$user_group]],
+    recurse => true
   }
 
-  # ---------------------------------------------------------------------------
-  # 3. Staging the product archive
-  # ---------------------------------------------------------------------------
-  file { 'binary':
-    path   => "${distribution_path}/${product_binary}",
+  # Copy binary to distribution path
+  file { "binary":
+    path   => "$distribution_path/${product_binary}",
     owner  => $user,
     group  => $user_group,
     mode   => '0644',
     source => "puppet:///modules/${module_name}/${product_binary}",
   }
 
-  # ---------------------------------------------------------------------------
-  # 4. Graceful stop & backup of any existing instance
-  # ---------------------------------------------------------------------------
-  exec { 'stop-server':
-    command     => "kill -TERM $(cat ${install_path}/wso2carbon.pid)",
-    onlyif      => "test -f ${install_path}/wso2carbon.pid",
-    path        => '/bin',
-    subscribe   => File['binary'],
+  # Stop the existing setup
+  exec { "stop-server":
+    command     => "kill -term $(cat ${install_path}/wso2carbon.pid)",
+    path        => "/bin/",
+    onlyif      => "/usr/bin/test -f ${install_path}/wso2carbon.pid",
+    subscribe   => File["binary"],
     refreshonly => true,
   }
 
-  exec { 'wait-for-stop':
-    command     => 'sleep 20',
-    onlyif      => "test -d ${install_path}",
-    path        => '/bin',
-    subscribe   => Exec['stop-server'],
+  # Wait for the server to stop
+  exec { "wait":
+    command     => "sleep 20",
+    path        => "/bin/",
+    onlyif      => "/usr/bin/test -d ${install_path}",
+    subscribe   => File["binary"],
     refreshonly => true,
   }
 
-  exec { 'delete-backup':
+  # Delete previous backup
+  exec { "delete-backup":
     command     => "rm -rf ${distribution_path}/backup/${product}-${product_version}",
-    onlyif      => "test -d ${distribution_path}/backup/${product}-${product_version}",
-    path        => '/bin',
-    subscribe   => File['binary'],
+    path        => "/bin/",
+    onlyif      => "/usr/bin/test -d ${distribution_path}/backup/${product}-${product_version}",
+    subscribe   => File["binary"],
     refreshonly => true,
   }
 
-  exec { 'create-backup':
+  # Create backup
+  exec { "create backup":
     command     => "mv ${install_path} ${distribution_path}/backup",
-    onlyif      => "test -d ${install_path}",
-    path        => '/bin',
-    subscribe   => Exec['wait-for-stop'],
+    path        => "/bin/",
+    onlyif      => "/usr/bin/test -d ${install_path}",
+    subscribe   => File["binary"],
     refreshonly => true,
   }
 
-  # ---------------------------------------------------------------------------
-  # 5. Unzip the new distribution
-  # ---------------------------------------------------------------------------
+  # Install the "unzip" package
   package { 'unzip':
     ensure => installed,
   }
 
-  exec { 'unzip-update':
-    command     => "unzip -qo ${product_binary}",
-    cwd         => $distribution_path,
-    onlyif      => "test ! -d ${install_path}",
-    path        => '/usr/bin',
-    subscribe   => File['binary'],
+  # Unzip the binary and create setup
+  exec { "unzip-update":
+    command     => "sudo unzip -qo ${product_binary}",
+    path        => "/usr/bin/",
+    cwd         => "${distribution_path}",
+    onlyif      => "/usr/bin/test ! -d ${install_path}",
+    subscribe   => File["binary"],
     refreshonly => true,
     require     => Package['unzip'],
   }
 
-  # Ensure extracted dir ownership (recursive to catch child files)
-  file { $install_path:
-    ensure  => directory,
-    recurse => true,
-    owner   => $user,
-    group   => $user_group,
-    require => Exec['unzip-update'],
-  }
-
-  # ---------------------------------------------------------------------------
-  # 6. Deploy config & startup script templates
-  # ---------------------------------------------------------------------------
+  # Copy micro-integrator.sh to installed directory
   file { "${install_path}/${start_script_template}":
     ensure  => file,
     owner   => $user,
     group   => $user_group,
     mode    => '0754',
-    content => template("${module_name}/mi-home/${start_script_template}.erb"),
+    content => template("${module_name}/mi-home/${start_script_template}.erb")
   }
 
+  # Copy deployment.toml to installed directory
   file { "${install_path}/${deployment_toml_template}":
     ensure  => file,
     owner   => $user,
     group   => $user_group,
     mode    => '0644',
-    content => template("${module_name}/mi-home/${deployment_toml_template}.erb"),
+    content => template("${module_name}/mi-home/${deployment_toml_template}.erb")
   }
 
-  # ---------------------------------------------------------------------------
-  # 7. systemd unit + service management
-  # ---------------------------------------------------------------------------
+  # Copy the unit file required to deploy the server as a service
   file { "/etc/systemd/system/${service_name}.service":
-    ensure  => file,
-    owner   => 'root',
-    group   => 'root',
+    ensure  => present,
+    owner   => root,
+    group   => root,
     mode    => '0754',
     content => template("${module_name}/${service_name}.service.erb"),
-    notify  => Exec['systemd-daemon-reload'],
   }
 
-  exec { 'systemd-daemon-reload':
-    command     => '/bin/systemctl daemon-reload',
-    path        => '/bin:/usr/bin',
-    refreshonly => true,
-  }
+  # Add agent specific file configurations
+  # $config_file_list.each |$config_file| {
+  #   exec { "sed -i -e 's/${config_file['key']}/${config_file['value']}/g' ${config_file['file']}":
+  #     path => "/bin/",
+  #   }
+  # }
 
-  service { $service_name:
-    ensure    => running,
-    enable    => true,
-    provider  => 'systemd',
-    require   => Exec['systemd-daemon-reload'],
-    subscribe => [
-      File["/etc/systemd/system/${service_name}.service"],
-      File["${install_path}/${start_script_template}"],
-      File["${install_path}/${deployment_toml_template}"],
-      Exec['unzip-update'],
-    ],
-  }
+  /*
+    Following script can be used to copy file to a given location.
+    This will copy some_file to install_path -> repository.
+    Note: Ensure that file is available in modules -> micro_integrator -> files
+  */
+  # file { "${install_path}/repository/some_file":
+  #   owner  => $user,
+  #   group  => $user_group,
+  #   mode   => '0644',
+  #   source => "puppet:///modules/${module_name}/some_file",
+  # }
 }
