@@ -16,8 +16,8 @@
 # under the License.
 #----------------------------------------------------------------------------
 
-# Class: mi_dashboard::custom
+# Class: integration_control_plane::custom
 # This class is reserved to run custom user code before starting the server.
-class mi_dashboard::custom {
+class integration_control_plane::custom {
   # resources
 }

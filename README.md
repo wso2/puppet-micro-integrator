@@ -5,15 +5,15 @@ This repository contains the Puppet modules for WSO2 Micro Integrator.
 ## Quick Start Guide
 
 ### Setting up the Puppet Server
-1. Setup a puppet server with puppet v7.27.0. [Guide](https://www.puppet.com/docs/puppet/7/install_puppet.html)
+1. Setup a puppet server with puppet v8.x. [Guide](https://help.puppet.com/core/8.13/Content/PuppetCore/installing_and_upgrading.htm)
 2. Copy `site.pp` file to `<puppet_environment>/manifests` directory ( Ex:- `/etc/puppetlabs/code/environments/production/manifests` )
 3. Copy `micro_integrator` directory to `<puppet_environment>/modules` directory ( Ex:- `/etc/puppetlabs/code/environments/production/modules` )
 4. Install `puppetlabs-java` module using the following command
     ```bash
     sudo puppet module install puppetlabs-java
     ```
-5. Download and update wso2mi-4.2.0 pack. Then copy it to the `<puppet_environment>/modules/micro_integrator/files` as `wso2mi-4.2.0.zip` directory.
-6. [Optional] Download and update wso2mi-dashboard-4.2.0 pack. Then copy it to the `<puppet_environment>/modules/mi_dashboard/files` as `wso2mi-dashboard-4.2.0.zip` directory.
+5. Download and update wso2mi-4.3.0 pack. Then copy it to the `<puppet_environment>/modules/micro_integrator/files` as `wso2mi-4.3.0.zip` directory.
+6. [Optional] Download and update wso2-integration-control-plane-1.0.0 pack. Then copy it to the `<puppet_environment>/modules/integration_control_plane/files` as `integration-control-plane-1.0.0.zip` directory.
 
 ### Setting up the Puppet Agents
 1. Install and configure your puppet agents with your puppet server. [Guide](https://www.puppet.com/docs/puppet/7/install_agents#install_agents)
@@ -29,7 +29,7 @@ This repository contains the Puppet modules for WSO2 Micro Integrator.
     ```
 4. [Optional] Run the Micro Integrator Dashboard on your **Puppet agents**. (Uncomment `dashboard_config` section in `modules/micro_integrator/templates/mi-home/conf/deployment.toml` to connect MI with Dashboard.)
     ```bash
-    export FACTER_profile=mi_dashboard
+    export FACTER_profile=integration_control_plane
     sudo -E puppet agent -vt
     ```
 
