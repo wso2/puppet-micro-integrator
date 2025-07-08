@@ -1,0 +1,39 @@
+[server_config]
+port = <%= @server_config_port %>
+
+[heartbeat_config]
+pool_size = <%= @heartbeat_config_pool_size %>
+
+[mi_super_admin]
+username = "<%= @mi_super_admin_username %>"
+password = "<%= @mi_super_admin_password %>"
+
+[bal_service_account]
+username = "<%= @bal_service_account_username %>"
+password = "<%= @bal_service_account_password %>"
+
+[si_service_account]
+username = "<%= @si_service_account_username %>"
+password = "<%= @si_service_account_password %>"
+
+[keystore]
+file_name   = "<%= @keystore_file_name %>"
+password    = "<%= @keystore_password %>"
+key_password= "<%= @keystore_key_password %>"
+
+
+[truststore]
+file_name   = "<%= @truststore_file_name %>"
+password    = "<%= @truststore_password %>"
+
+#by default file based user store is enabled
+#[internal_apis.file_user_store]
+#enable = true
+
+#[[internal_apis.users]]
+#user.name = "admin"
+#user.password = "admin"
+#user.is_admin = true
+
+[user_access]
+make_non_admin_users_read_only = <%= @make_non_admin_users_read_only %>
