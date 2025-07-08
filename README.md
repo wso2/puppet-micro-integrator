@@ -5,7 +5,7 @@ This repository contains the Puppet modules for WSO2 Micro Integrator.
 ## Quick Start Guide
 
 ### Setting up the Puppet Server
-1. Setup a puppet server with puppet v8. [Guide](https://help.puppet.com/core/8.13/Content/PuppetCore/installing_and_upgrading.htm)
+1. Setup a puppet server with puppet v8.x. [Guide](https://help.puppet.com/core/8.13/Content/PuppetCore/installing_and_upgrading.htm)
 2. Copy `site.pp` file to `<puppet_environment>/manifests` directory ( Ex:- `/etc/puppetlabs/code/environments/production/manifests` )
 3. Copy `micro_integrator` directory to `<puppet_environment>/modules` directory ( Ex:- `/etc/puppetlabs/code/environments/production/modules` )
 4. Install `puppetlabs-java` module using the following command
