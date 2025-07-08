@@ -20,22 +20,24 @@
 # This class includes all the necessary parameters.
 class micro_integrator::params {
 
+  # Service account
   $user = 'wso2carbon'
   $user_group = 'wso2'
   $user_id = 802
   $user_group_id = 802
 
+  # Product basics
   $product = 'wso2mi'
   $product_version = '4.3.0'
-  $service_name = "${product}"
+  $service_name = $product
 
-  # Define the template
-  $start_script_template = "bin/micro-integrator.sh"
-  $deployment_toml_template = "conf/deployment.toml"
+  # Templates inside the ZIP
+  $start_script_template = 'bin/micro-integrator.sh'
+  $deployment_toml_template = 'conf/deployment.toml'
 
   # Directories
-  $products_dir = "/usr/local/wso2"
-  $java_home = "/usr"
+  $products_dir = '/usr/local/wso2'
+  $java_home = '/usr'
 
   # Product and installation information
   $product_binary = "${product}-${product_version}.zip"
