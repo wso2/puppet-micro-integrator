@@ -159,30 +159,12 @@ class integration_control_plane (
     require => File[$install_path],
   }
 
-  # ── 7. systemd unit + service management ───────────────────────────────────
+  # ── 7. systemd unit ────────────────────────────────────────────────────────
   file { "/etc/systemd/system/${service_name}.service":
     ensure  => file,
     owner   => 'root',
     group   => 'root',
     mode    => '0754',
     content => template("${module_name}/${service_name}.service.erb"),
-    notify  => Exec['systemd-daemon-reload'],
-  }
-
-  exec { 'systemd-daemon-reload':
-    command     => '/bin/systemctl daemon-reload',
-    path        => '/bin:/usr/bin',
-    refreshonly => true,
-  }
-
-  service { $service_name:
-    ensure    => running,
-    enable    => true,
-    provider  => 'systemd',
-    subscribe => [
-      File["/etc/systemd/system/${service_name}.service"],
-      File["${install_path}/${start_script_template}"],
-      File["${install_path}/${deployment_toml_template}"],
-    ],
   }
 }
