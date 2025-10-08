@@ -27,7 +27,7 @@ class micro_integrator::params {
 
   # Product basics
   $product         = 'wso2mi'
-  $product_version = '4.4.0'
+  $product_version = '4.5.0'
   $service_name    = $product        # systemd unit name
 
   # Templates inside the ZIP
