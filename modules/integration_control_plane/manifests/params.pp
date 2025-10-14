@@ -26,7 +26,7 @@ class integration_control_plane::params {
 
   # Product basics
   $product         = 'wso2-integration-control-plane'
-  $product_version = '1.1.0'
+  $product_version = '1.2.0'
   $service_name    = $product        # systemd unit name
 
   # Templates inside the ZIP
