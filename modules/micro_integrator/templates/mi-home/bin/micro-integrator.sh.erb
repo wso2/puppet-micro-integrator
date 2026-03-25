@@ -121,6 +121,38 @@ if [ -e "$CARBON_HOME/wso2carbon.pid" ]; then
 fi
 
 # ----- Process the input command ----------------------------------------------
+
+# Function to export variables from the given .env file
+export_env_file() {
+  local file_path="$1"
+
+  # Check if the file exists
+  if [ ! -f "$file_path" ]; then
+    echo "Error: File '$file_path' not found."
+    return 1  # Return with an error status
+  fi
+
+  # Read the .env file and export each variable to the environment
+  while IFS='=' read -r key value; do
+      # Ignore lines starting with '#' (comments) or empty lines
+      case "$key" in
+          \#*|"")
+              # Skip comments or empty lines
+              continue
+              ;;
+          *)
+              # Trim surrounding whitespace from key and value
+              key=$(echo "$key" | xargs)
+              value=$(echo "$value" | xargs)
+              # Export the key-value pair to the environment
+              export "$key=$value"
+              ;;
+      esac
+  done < "$file_path"
+
+  echo "Environment variables loaded from $file_path."
+}
+
 args=""
 for c in $*
 do
@@ -145,6 +177,16 @@ do
     else
         args="$args $c"
     fi
+    # Check if the argument starts with --env-file=
+    case "$c" in
+      --env-file=*)
+        file_path="${c#--env-file=}"
+        export_env_file "$file_path"
+        ;;
+      *)
+        continue
+        ;;
+    esac
 done
 
 if [ "$ARGUMENT" = "car" ]; then
@@ -160,7 +202,7 @@ if [ "$CMD" = "--debug" ]; then
     echo "Warning !!!. User specified JAVA_OPTS will be ignored, once you give the --debug option."
   fi
   CMD="RUN"
-  JAVA_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=$PORT"
+  JAVA_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:$PORT"
   echo "Please start the remote debugging client to continue..."
 elif [ "$CMD" = "start" ]; then
   if [ -e "$CARBON_HOME/wso2carbon.pid" ]; then
@@ -202,9 +244,9 @@ fi
 # ---------- Handle the SSL Issue with proper JDK version --------------------
 java_version=$("$JAVACMD" -version 2>&1 | awk -F '"' '/version/ {print $2}')
 java_version_formatted=$(echo "$java_version" | awk -F. '{printf("%02d%02d",$1,$2);}')
-if [ $java_version_formatted -lt 1100 ] || [ $java_version_formatted -gt 1700 ]; then
+if [ $java_version_formatted -lt 2100 ] || [ $java_version_formatted -gt 2500 ]; then
    echo " Starting WSO2 MI (in unsupported JDK)"
-   echo " [ERROR] WSO2 MI is supported only between JDK 11 and JDK 17"
+   echo " [ERROR] WSO2 MI is supported only between JDK 21 and JDK 25"
    exit 0
 fi
 
@@ -283,8 +325,23 @@ fi
 JAVA_VER_BASED_OPTS=""
 
 if [ $java_version_formatted -ge 1100 ]; then
-    JAVA_VER_BASED_OPTS="--add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.xml/com.sun.org.apache.xerces.internal.util=ALL-UNNAMED --add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens java.rmi/sun.rmi.transport=ALL-UNNAMED"
+    JAVA_VER_BASED_OPTS="--add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.xml/com.sun.org.apache.xerces.internal.util=ALL-UNNAMED --add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens java.rmi/sun.rmi.transport=ALL-UNNAMED --add-opens=java.management/sun.management=ALL-UNNAMED --add-exports=jdk.naming.dns/com.sun.jndi.dns=ALL-UNNAMED"
 fi
+
+if [ $java_version_formatted -ge 2400 ]; then
+    JAVA_VER_BASED_OPTS="$JAVA_VER_BASED_OPTS --sun-misc-unsafe-memory-access=allow"
+fi
+
+# start diagnostic tool in background in diagnostic-tool/bin/diagnostic
+"$CARBON_HOME"/diagnostics-tool/bin/diagnostics.sh &
+diagnostic_tool_pid=$!
+
+# trap signals so we can shutdown the diagnostic tool
+cleanup() {
+    kill "$diagnostic_tool_pid"
+}
+trap 'cleanup' EXIT INT
+
 
 while [ "$status" = "$START_EXIT_STATUS" ]
 do
@@ -342,8 +399,11 @@ do
     -DenableReadinessProbe=true \
     -DenableLivenessProbe=true \
     -DenableManagementApi=true \
+    -DenableICPApi=true \
     -DskipStartupExtensions=false \
     -Dautomation.mode.seq.car.name="$CAR_NAME" \
+    -Dpolyglot.engine.WarnInterpreterOnly=false \
+    -Dpolyglot.js.ecmascript-version=2022 \
     -Dlog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector \
     -Dorg.ops4j.pax.logging.logReaderEnabled=false \
     -Dorg.ops4j.pax.logging.eventAdminEnabled=false \
