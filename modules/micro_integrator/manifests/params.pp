@@ -74,7 +74,7 @@ class micro_integrator::params {
   $icp_integration        = 'default'
   $icp_secret             = ''
   $icp_heartbeat_interval = 2
-  $icp_ssl_verify         = false
+  $icp_ssl_verify         = true
 
   # ---- Automatic org-secret bootstrap (optional) ----
   # Disabled by default - $icp_secret above is normally minted once by hand
