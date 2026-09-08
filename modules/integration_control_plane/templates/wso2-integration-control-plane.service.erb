@@ -3,16 +3,13 @@ Description=WSO2 Integration Control Plane
 After=network.target
 
 [Service]
-ExecStart=/bin/sh <%= @install_path %>/bin/dashboard.sh start
-ExecStop=/bin/sh <%= @install_path %>/bin/dashboard.sh stop
-ExecReload=/bin/sh <%= @install_path %>/bin/dashboard.sh restart
-PIDFile=<%= @install_path %>/runtime.pid
+ExecStart=/bin/bash <%= @install_path %>/bin/icp.sh start
+ExecStop=/bin/bash <%= @install_path %>/bin/icp.sh stop
+ExecReload=/bin/bash <%= @install_path %>/bin/icp.sh restart
+PIDFile=<%= @install_path %>/icp.pid
 User=<%= @user %>
 Group=<%= @user_group %>
 Type=forking
-PIDFile=<%= @install_path %>/runtime.pid
-User=<%= @user %>
-Group=<%= @user_group %>
 Restart=on-failure
 RestartSec=5
 TimeoutStartSec=180s

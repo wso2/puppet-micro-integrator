@@ -80,8 +80,8 @@ class integration_control_plane (
 
   # ── 4. graceful stop & backup ──────────────────────────────────────────────
   exec { 'stop-icp':
-    command     => "kill -TERM $(cat ${install_path}/runtime.pid)",
-    onlyif      => "test -f ${install_path}/runtime.pid",
+    command     => "kill -TERM $(cat ${install_path}/icp.pid)",
+    onlyif      => "test -f ${install_path}/icp.pid",
     path        => '/bin',
     subscribe   => File['binary'],
     refreshonly => true,
@@ -135,12 +135,15 @@ class integration_control_plane (
   }
 
   # ── 6. templates ───────────────────────────────────────────────────────────
+  # bin/icp.sh is the product's own Ballerina launcher, shipped inside the
+  # distribution ZIP - only its permissions are managed here, its content is
+  # left untouched.
   file { "${install_path}/${start_script_template}":
     ensure  => file,
     owner   => $user,
     group   => $user_group,
     mode    => '0754',
-    content => template("${module_name}/icp-home/${start_script_template}.erb"),
+    require => File[$install_path],
   }
 
   file { "${install_path}/${deployment_toml_template}":
@@ -149,6 +152,7 @@ class integration_control_plane (
     group   => $user_group,
     mode    => '0644',
     content => template("${module_name}/icp-home/${deployment_toml_template}.erb"),
+    require => File[$install_path],
   }
 
   file { "${install_path}/logs":

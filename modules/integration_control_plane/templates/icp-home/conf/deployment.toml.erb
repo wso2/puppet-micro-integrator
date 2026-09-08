@@ -1,39 +1,35 @@
-[server_config]
-port = <%= @server_config_port %>
+# Managed by Puppet (module: integration_control_plane). Local edits will be
+# overwritten on the next Puppet run - change modules/integration_control_plane/
+# manifests/params.pp or override via Hiera instead.
 
-[heartbeat_config]
-pool_size = <%= @heartbeat_config_pool_size %>
+serverPort = <%= @server_port %>
+runtimeListenerPort = <%= @runtime_listener_port %>
+authBackendUrl = "<%= @auth_backend_url %>"
+frontendJwtHMACSecret = "<%= @frontend_jwt_hmac_secret %>"
 
-[mi_super_admin]
-username = "<%= @mi_super_admin_username %>"
-password = "<%= @mi_super_admin_password %>"
+schedulerIntervalSeconds = <%= @scheduler_interval_seconds %>
+logLevel = "<%= @log_level %>"
+enableAuditLogging = <%= @enable_audit_logging %>
+enableMetrics = <%= @enable_metrics %>
 
-[bal_service_account]
-username = "<%= @bal_service_account_username %>"
-password = "<%= @bal_service_account_password %>"
+[icp_server.secrets]
 
-[si_service_account]
-username = "<%= @si_service_account_username %>"
-password = "<%= @si_service_account_password %>"
+[icp_server.storage]
+<% if @db_enabled -%>
+dbType = "<%= @db_type %>"
+dbHost = "<%= @db_host %>"
+dbPort = <%= @db_port %>
+dbName = "<%= @db_name %>"
+dbUser = "<%= @db_user %>"
+dbPassword = "<%= @db_password %>"
+<% else -%>
+# Using the embedded H2 database. Set integration_control_plane::params::db_enabled
+# to true and provide db_host/db_port/db_name/db_user/db_password for a
+# production database (mysql, postgresql, mssql or oracle).
+<% end -%>
 
-[keystore]
-file_name   = "<%= @keystore_file_name %>"
-password    = "<%= @keystore_password %>"
-key_password= "<%= @keystore_key_password %>"
+[icp_server.storage.secrets]
 
-
-[truststore]
-file_name   = "<%= @truststore_file_name %>"
-password    = "<%= @truststore_password %>"
-
-#by default file based user store is enabled
-#[internal_apis.file_user_store]
-#enable = true
-
-#[[internal_apis.users]]
-#user.name = "admin"
-#user.password = "admin"
-#user.is_admin = true
-
-[user_access]
-make_non_admin_users_read_only = <%= @make_non_admin_users_read_only %>
+[[ballerina.log.modules]]
+name = "wso2/icp_server"
+level = "<%= @log_level %>"

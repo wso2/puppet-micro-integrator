@@ -17,9 +17,31 @@ password = "<%= @truststore_password %>"
 alias = "<%= @truststore_alias %>"
 algorithm = "<%= @truststore_algorithm %>"
 
-## Uncomment if you are setting up MI Dashboard
-# [dashboard_config]
-# dashboard_url = "https://localhost:9743/dashboard/api/"
+## Connect this Micro Integrator instance to a WSO2 Integration Control Plane
+## (ICP). Set micro_integrator::params::icp_enabled = true and provide
+## icp_secret (the org secret issued by ICP for this environment/project/
+## integration) to activate this block.
+<% if @icp_enabled -%>
+[icp_config]
+enabled = true
+icp_url = "<%= @icp_url %>"
+environment = "<%= @icp_environment %>"
+project = "<%= @icp_project %>"
+integration = "<%= @icp_integration %>"
+secret = "<%= @resolved_icp_secret %>"
+heartbeat_interval = <%= @icp_heartbeat_interval %>
+ssl_verify = <%= @icp_ssl_verify %>
+<% else -%>
+# [icp_config]
+# enabled = true
+# icp_url = "<%= @icp_url %>"
+# environment = "<%= @icp_environment %>"
+# project = "<%= @icp_project %>"
+# integration = "<%= @icp_integration %>"
+# secret = "<org-secret-issued-by-icp>"
+# heartbeat_interval = <%= @icp_heartbeat_interval %>
+# ssl_verify = <%= @icp_ssl_verify %>
+<% end -%>
 
 ## Following are set of example configs. Please refer docs for complete set of configurations.
 
