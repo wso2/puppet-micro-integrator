@@ -179,6 +179,9 @@ class micro_integrator (
       require => File['/opt/wso2-puppet-scripts'],
     }
 
+    # create-icp-org-secret.sh requires both of these on $PATH.
+    package { ['curl', 'jq']: ensure => installed }
+
     # ICP_PASSWORD is read from icp_admin_password_file by the shell at
     # execution time (env-var prefix assignment), not interpolated from a
     # Puppet variable - so the command text below, which IS shipped to
@@ -189,7 +192,7 @@ class micro_integrator (
       command => "ICP_PASSWORD=\"$(cat ${icp_admin_password_file})\" /opt/wso2-puppet-scripts/create-icp-org-secret.sh --icp-url ${icp_api_url} --username ${icp_admin_username} --environment-id ${icp_environment_id} ${component_id_arg} ${icp_bootstrap_insecure_arg} > ${icp_secret_file}.tmp && mv ${icp_secret_file}.tmp ${icp_secret_file}",
       creates => $icp_secret_file,
       path    => '/usr/bin:/bin',
-      require => [ File['/opt/wso2-puppet-scripts/create-icp-org-secret.sh'], File['/etc/wso2'] ],
+      require => [ File['/opt/wso2-puppet-scripts/create-icp-org-secret.sh'], File['/etc/wso2'], Package['curl'], Package['jq'] ],
     }
 
     file { $icp_secret_file:
