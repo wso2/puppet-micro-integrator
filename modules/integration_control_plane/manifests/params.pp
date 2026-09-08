@@ -15,7 +15,16 @@
 # specific language governing permissions and limitations
 # under the License.
 #----------------------------------------------------------------------------
-class integration_control_plane::params {
+class integration_control_plane::params (
+  # Signs ICP's frontend session/auth JWTs. No default on purpose: every
+  # deployment must supply its own value (e.g. via Hiera key
+  # integration_control_plane::params::frontend_jwt_hmac_secret) so
+  # installations don't share a signing key baked into this public repo.
+  # Puppet fails catalog compilation - before any resource, including
+  # integration_control_plane::startserver's service, is applied - if this
+  # isn't provided.
+  String $frontend_jwt_hmac_secret,
+) {
 
   # Service account
   $user            = 'wso2carbon'
@@ -52,7 +61,6 @@ class integration_control_plane::params {
   $server_port                = 9446
   $runtime_listener_port      = 9445
   $auth_backend_url           = 'https://localhost:9447'
-  $frontend_jwt_hmac_secret   = 'default-secret-key-at-least-32-characters-long-for-hs256'
   $log_level                  = 'INFO'
   $enable_audit_logging       = true
   $enable_metrics             = true

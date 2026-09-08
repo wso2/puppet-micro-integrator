@@ -27,7 +27,7 @@ This repository contains the Puppet modules for WSO2 Micro Integrator.
     export FACTER_profile=micro_integrator
     sudo -E puppet agent -vt
     ```
-4. [Optional] Run the Integration Control Plane (ICP) on your **Puppet agents**.
+4. [Optional] Run the Integration Control Plane (ICP) on your **Puppet agents**. `integration_control_plane::params::frontend_jwt_hmac_secret` has no default - set it via Hiera to a deployment-specific value (32+ characters) before running the agent, or the catalog will fail to compile rather than fall back to a shared signing key.
     ```bash
     export FACTER_profile=integration_control_plane
     sudo -E puppet agent -vt
