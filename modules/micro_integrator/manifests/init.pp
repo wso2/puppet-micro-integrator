@@ -179,12 +179,17 @@ class micro_integrator (
       require => File['/opt/wso2-puppet-scripts'],
     }
 
+    # ICP_PASSWORD is read from icp_admin_password_file by the shell at
+    # execution time (env-var prefix assignment), not interpolated from a
+    # Puppet variable - so the command text below, which IS shipped to
+    # this agent as part of the catalog, never contains the plaintext
+    # admin password, only a file path. It still reaches the script the
+    # same way as before (as an environment variable, not a CLI argument).
     exec { 'create-icp-org-secret':
-      command     => "/opt/wso2-puppet-scripts/create-icp-org-secret.sh --icp-url ${icp_api_url} --username ${icp_admin_username} --environment-id ${icp_environment_id} ${component_id_arg} ${icp_bootstrap_insecure_arg} > ${icp_secret_file}.tmp && mv ${icp_secret_file}.tmp ${icp_secret_file}",
-      environment => ["ICP_PASSWORD=${icp_admin_password}"],
-      creates     => $icp_secret_file,
-      path        => '/usr/bin:/bin',
-      require     => [ File['/opt/wso2-puppet-scripts/create-icp-org-secret.sh'], File['/etc/wso2'] ],
+      command => "ICP_PASSWORD=\"$(cat ${icp_admin_password_file})\" /opt/wso2-puppet-scripts/create-icp-org-secret.sh --icp-url ${icp_api_url} --username ${icp_admin_username} --environment-id ${icp_environment_id} ${component_id_arg} ${icp_bootstrap_insecure_arg} > ${icp_secret_file}.tmp && mv ${icp_secret_file}.tmp ${icp_secret_file}",
+      creates => $icp_secret_file,
+      path    => '/usr/bin:/bin',
+      require => [ File['/opt/wso2-puppet-scripts/create-icp-org-secret.sh'], File['/etc/wso2'] ],
     }
 
     file { $icp_secret_file:

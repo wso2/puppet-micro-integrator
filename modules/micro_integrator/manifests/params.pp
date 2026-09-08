@@ -91,11 +91,15 @@ class micro_integrator::params {
   # and login are GraphQL/auth calls that live on ICP's main serverPort
   # (default 9446), not the runtimeListenerPort $icp_url points at. Only the
   # bootstrap script/exec uses this one.
-  $icp_secret_bootstrap = false
-  $icp_api_url          = 'https://localhost:9446'
-  $icp_admin_username   = 'admin'
-  $icp_admin_password   = 'admin'
-  $icp_environment_id   = ''
-  $icp_component_id     = ''
-  $icp_secret_file      = '/etc/wso2/icp-org-secret'
+  # $icp_admin_password_file (NOT a plaintext password) is read locally by
+  # the agent at exec time - see init.pp - so the ICP admin password itself
+  # never gets interpolated into Puppet's compiled catalog. Provision this
+  # file out of band (mode 0600, owned by $user) before enabling bootstrap.
+  $icp_secret_bootstrap    = false
+  $icp_api_url             = 'https://localhost:9446'
+  $icp_admin_username      = 'admin'
+  $icp_admin_password_file = '/etc/wso2/icp-admin-password'
+  $icp_environment_id      = ''
+  $icp_component_id        = ''
+  $icp_secret_file         = '/etc/wso2/icp-org-secret'
 }
