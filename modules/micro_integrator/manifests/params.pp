@@ -80,11 +80,12 @@ class micro_integrator::params {
   # Disabled by default - $icp_secret above is normally minted once by hand
   # (files/create-icp-org-secret.sh) and pasted into Hiera.
   # Set $icp_secret_bootstrap = true to instead have this module mint the
-  # secret itself on first run and read it back automatically from then on
-  # (see init.pp and lib/facter/icp_org_secret.rb). $icp_environment_id is
-  # the environment's UUID (from ICP's `environments` GraphQL query) - not
-  # the same as $icp_environment above, which is the handler string MI
-  # itself reports in its heartbeat.
+  # secret itself and splice it into deployment.toml, both in the same
+  # agent run (see init.pp) - the value is read and written locally on
+  # this node only, never exposed via a Facter fact or Puppet's compiled
+  # catalog content. $icp_environment_id is the environment's UUID (from
+  # ICP's `environments` GraphQL query) - not the same as $icp_environment
+  # above, which is the handler string MI itself reports in its heartbeat.
   #
   # $icp_api_url is a SEPARATE address from $icp_url above: createOrgSecret
   # and login are GraphQL/auth calls that live on ICP's main serverPort

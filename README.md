@@ -45,11 +45,10 @@ This repository contains the Puppet modules for WSO2 Micro Integrator.
     ```
     Set `$icp_enabled = true`, `$icp_secret = '<value printed above>'`, and `$icp_url = 'https://<icp-host>:9445'` (plus `$icp_environment`/`$icp_project`/`$icp_integration` as needed) in `modules/micro_integrator/manifests/params.pp` (or override via Hiera), then re-run the agent with `FACTER_profile=micro_integrator`.
 
-    **Option B - let Puppet mint it** by setting `$icp_enabled = true`, `$icp_secret_bootstrap = true`, `$icp_api_url` (server_port, e.g. `https://<icp-host>:9446`), `$icp_url` (runtime_listener_port, e.g. `https://<icp-host>:9445`), `$icp_admin_username`/`$icp_admin_password`, and `$icp_environment_id` in `modules/micro_integrator/manifests/params.pp`. On the **first** agent run it copies `create-icp-org-secret.sh` to the node, runs it once against `$icp_api_url`, and caches the result at `/etc/wso2/icp-org-secret` (the `icp_org_secret` fact then reports it back). Because facts are gathered before the catalog compiles, `deployment.toml` only picks up the secret starting from the **second** agent run onward - run the agent twice:
+    **Option B - let Puppet mint it** by setting `$icp_enabled = true`, `$icp_secret_bootstrap = true`, `$icp_api_url` (server_port, e.g. `https://<icp-host>:9446`), `$icp_url` (runtime_listener_port, e.g. `https://<icp-host>:9445`), `$icp_admin_username`/`$icp_admin_password`, and `$icp_environment_id` in `modules/micro_integrator/manifests/params.pp`. A single agent run copies `create-icp-org-secret.sh` to the node, runs it once against `$icp_api_url`, caches the result at `/etc/wso2/icp-org-secret`, and splices it into the rendered `deployment.toml` - all locally on the node, so the secret is never exposed via a Facter fact (which would ship it to the master with every catalog request) or embedded in Puppet's compiled catalog content:
     ```bash
     export FACTER_profile=micro_integrator
-    sudo -E puppet agent -vt   # mints the secret
-    sudo -E puppet agent -vt   # wires it into deployment.toml
+    sudo -E puppet agent -vt
     ```
 
 ## For production deployments

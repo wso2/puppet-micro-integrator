@@ -37,15 +37,15 @@ class micro_integrator (
   $deployment_toml_template = $micro_integrator::params::deployment_toml_template
   $service_name             = $product
 
-  # Effective ICP org secret: prefer the value bootstrapped locally (once the
-  # icp_org_secret fact picks it up - see lib/facter/icp_org_secret.rb and
-  # step 5.1 below), otherwise fall back to the statically configured
-  # $icp_secret (e.g. from Hiera, minted by hand with files/create-icp-org-secret.sh).
-  if $icp_secret_bootstrap and $facts['icp_org_secret'] and $facts['icp_org_secret'] != '' {
-    $resolved_icp_secret = $facts['icp_org_secret']
-  } else {
-    $resolved_icp_secret = $icp_secret
-  }
+  # deployment.toml is always rendered with the statically configured
+  # $icp_secret (e.g. from Hiera, minted by hand with
+  # files/create-icp-org-secret.sh) - never a live secret value. When
+  # $icp_secret_bootstrap is on, the real secret is spliced into the
+  # rendered file in place by a local exec (step 5.1) that reads it
+  # directly off this node's disk, so the value never has to travel
+  # through a Facter fact (sent to the master with every catalog request)
+  # or through Puppet's own compiled catalog content.
+  $resolved_icp_secret = $icp_secret
 
   # 1. Service account --------------------------------------------------------
   if $manage_group {
@@ -193,6 +193,22 @@ class micro_integrator (
       owner   => $user,
       group   => $user_group,
       require => Exec['create-icp-org-secret'],
+    }
+
+    # Splice the real secret into the already-rendered deployment.toml
+    # in place, entirely on this node. Puppet's own template() always
+    # renders `secret = ""` (see $resolved_icp_secret above), so the
+    # command text below - which IS shipped to this agent as part of the
+    # catalog - never contains the secret value itself, only file paths;
+    # the secret bytes are read and written locally by awk at apply time.
+    # `unless` keeps this idempotent: it only re-runs when the deployed
+    # file doesn't already carry the current secret (e.g. right after
+    # Puppet's file resource re-rendered deployment.toml from scratch).
+    exec { 'inject-icp-secret':
+      command => "awk -v s=\"$(cat ${icp_secret_file})\" '{ if (\$0 ~ /^secret = /) print \"secret = \\\"\" s \"\\\"\"; else print }' ${install_path}/${deployment_toml_template} > ${install_path}/${deployment_toml_template}.tmp && mv ${install_path}/${deployment_toml_template}.tmp ${install_path}/${deployment_toml_template}",
+      unless  => "grep -qF \"secret = \\\"$(cat ${icp_secret_file})\\\"\" ${install_path}/${deployment_toml_template}",
+      path    => '/usr/bin:/bin',
+      require => [ File[$icp_secret_file], File["${install_path}/${deployment_toml_template}"] ],
     }
   }
 
