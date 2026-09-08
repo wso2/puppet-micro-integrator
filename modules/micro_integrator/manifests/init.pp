@@ -212,8 +212,14 @@ class micro_integrator (
     # `unless` keeps this idempotent: it only re-runs when the deployed
     # file doesn't already carry the current secret (e.g. right after
     # Puppet's file resource re-rendered deployment.toml from scratch).
+    # This exec runs as root, so the .tmp file it creates would otherwise
+    # land with root ownership and a umask-dependent mode; chown/chmod are
+    # applied to the .tmp file BEFORE the rename so the swap-in is always
+    # atomic and deployment.toml never ends up with the wrong owner/mode
+    # (matching the same $user/$user_group/0644 the file resource below
+    # already manages it as).
     exec { 'inject-icp-secret':
-      command => "awk -v s=\"$(cat ${icp_secret_file})\" '{ if (\$0 ~ /^secret = /) print \"secret = \\\"\" s \"\\\"\"; else print }' ${install_path}/${deployment_toml_template} > ${install_path}/${deployment_toml_template}.tmp && mv ${install_path}/${deployment_toml_template}.tmp ${install_path}/${deployment_toml_template}",
+      command => "awk -v s=\"$(cat ${icp_secret_file})\" '{ if (\$0 ~ /^secret = /) print \"secret = \\\"\" s \"\\\"\"; else print }' ${install_path}/${deployment_toml_template} > ${install_path}/${deployment_toml_template}.tmp && chown ${user}:${user_group} ${install_path}/${deployment_toml_template}.tmp && chmod 0644 ${install_path}/${deployment_toml_template}.tmp && mv ${install_path}/${deployment_toml_template}.tmp ${install_path}/${deployment_toml_template}",
       unless  => "grep -qF \"secret = \\\"$(cat ${icp_secret_file})\\\"\" ${install_path}/${deployment_toml_template}",
       path    => '/usr/bin:/bin',
       require => [ File[$icp_secret_file], File["${install_path}/${deployment_toml_template}"] ],
