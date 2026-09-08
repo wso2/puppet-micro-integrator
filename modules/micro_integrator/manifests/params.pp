@@ -54,4 +54,52 @@ class micro_integrator::params {
   $truststore_password   = 'wso2carbon'
   $truststore_alias      = 'symmetric.key.value'
   $truststore_algorithm  = 'JKS'
+
+  # ---- ICP (Integration Control Plane) connectivity ----
+  # Disabled by default. Set $icp_enabled = true and fill in $icp_secret
+  # (the org secret issued by ICP for this environment/project/integration)
+  # to register this MI node with an Integration Control Plane instance.
+  #
+  # $icp_url is the value MI itself uses for its heartbeat traffic, and MUST
+  # point at ICP's runtimeListenerPort (default 9445 - the `/icp` heartbeat
+  # service), NOT ICP's main serverPort (default 9446, GraphQL/auth/web UI).
+  # These are two different listeners on the ICP side - confirmed by testing
+  # against a real instance, where heartbeats sent to serverPort got a plain
+  # 405, and only runtimeListenerPort accepted them. This should match
+  # integration_control_plane::params::runtime_listener_port on the ICP host.
+  $icp_enabled            = false
+  $icp_url                = 'https://localhost:9445'
+  $icp_environment        = 'Development'
+  $icp_project            = 'default'
+  $icp_integration        = 'default'
+  $icp_secret             = ''
+  $icp_heartbeat_interval = 2
+  $icp_ssl_verify         = true
+
+  # ---- Automatic org-secret bootstrap (optional) ----
+  # Disabled by default - $icp_secret above is normally minted once by hand
+  # (files/create-icp-org-secret.sh) and pasted into Hiera.
+  # Set $icp_secret_bootstrap = true to instead have this module mint the
+  # secret itself and splice it into deployment.toml, both in the same
+  # agent run (see init.pp) - the value is read and written locally on
+  # this node only, never exposed via a Facter fact or Puppet's compiled
+  # catalog content. $icp_environment_id is the environment's UUID (from
+  # ICP's `environments` GraphQL query) - not the same as $icp_environment
+  # above, which is the handler string MI itself reports in its heartbeat.
+  #
+  # $icp_api_url is a SEPARATE address from $icp_url above: createOrgSecret
+  # and login are GraphQL/auth calls that live on ICP's main serverPort
+  # (default 9446), not the runtimeListenerPort $icp_url points at. Only the
+  # bootstrap script/exec uses this one.
+  # $icp_admin_password_file (NOT a plaintext password) is read locally by
+  # the agent at exec time - see init.pp - so the ICP admin password itself
+  # never gets interpolated into Puppet's compiled catalog. Provision this
+  # file out of band (mode 0600, owned by $user) before enabling bootstrap.
+  $icp_secret_bootstrap    = false
+  $icp_api_url             = 'https://localhost:9446'
+  $icp_admin_username      = 'admin'
+  $icp_admin_password_file = '/etc/wso2/icp-admin-password'
+  $icp_environment_id      = ''
+  $icp_component_id        = ''
+  $icp_secret_file         = '/etc/wso2/icp-org-secret'
 }

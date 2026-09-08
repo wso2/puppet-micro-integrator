@@ -37,6 +37,16 @@ class micro_integrator (
   $deployment_toml_template = $micro_integrator::params::deployment_toml_template
   $service_name             = $product
 
+  # deployment.toml is always rendered with the statically configured
+  # $icp_secret (e.g. from Hiera, minted by hand with
+  # files/create-icp-org-secret.sh) - never a live secret value. When
+  # $icp_secret_bootstrap is on, the real secret is spliced into the
+  # rendered file in place by a local exec (step 5.1) that reads it
+  # directly off this node's disk, so the value never has to travel
+  # through a Facter fact (sent to the master with every catalog request)
+  # or through Puppet's own compiled catalog content.
+  $resolved_icp_secret = $icp_secret
+
   # 1. Service account --------------------------------------------------------
   if $manage_group {
     group { $user_group:
@@ -134,6 +144,88 @@ class micro_integrator (
     require => Exec['unzip-update'],
   }
 
+  # 5.1 ICP org-secret bootstrap (optional) ------------------------------------
+  # Mints the secret exactly once per node: the exec's `creates` guard means
+  # it never re-runs (and never rotates the secret) once icp_secret_file
+  # exists. A failed script run does not leave a partial file behind, so
+  # Puppet retries it on the next run.
+  if $icp_secret_bootstrap {
+    if $icp_component_id == '' {
+      $component_id_arg = ''
+    } else {
+      $component_id_arg = "--component-id ${icp_component_id}"
+    }
+
+    if $icp_ssl_verify {
+      $icp_bootstrap_insecure_arg = ''
+    } else {
+      $icp_bootstrap_insecure_arg = '--insecure'
+    }
+
+    file { '/etc/wso2':
+      ensure => directory,
+      mode   => '0700',
+    }
+
+    file { '/opt/wso2-puppet-scripts':
+      ensure => directory,
+      mode   => '0755',
+    }
+
+    file { '/opt/wso2-puppet-scripts/create-icp-org-secret.sh':
+      ensure  => file,
+      mode    => '0700',
+      source  => "puppet:///modules/${module_name}/create-icp-org-secret.sh",
+      require => File['/opt/wso2-puppet-scripts'],
+    }
+
+    # create-icp-org-secret.sh requires both of these on $PATH.
+    package { ['curl', 'jq']: ensure => installed }
+
+    # ICP_PASSWORD is read from icp_admin_password_file by the shell at
+    # execution time (env-var prefix assignment), not interpolated from a
+    # Puppet variable - so the command text below, which IS shipped to
+    # this agent as part of the catalog, never contains the plaintext
+    # admin password, only a file path. It still reaches the script the
+    # same way as before (as an environment variable, not a CLI argument).
+    exec { 'create-icp-org-secret':
+      command => "ICP_PASSWORD=\"$(cat ${icp_admin_password_file})\" /opt/wso2-puppet-scripts/create-icp-org-secret.sh --icp-url ${icp_api_url} --username ${icp_admin_username} --environment-id ${icp_environment_id} ${component_id_arg} ${icp_bootstrap_insecure_arg} > ${icp_secret_file}.tmp && mv ${icp_secret_file}.tmp ${icp_secret_file}",
+      creates => $icp_secret_file,
+      path    => '/usr/bin:/bin',
+      require => [ File['/opt/wso2-puppet-scripts/create-icp-org-secret.sh'], File['/etc/wso2'], Package['curl'], Package['jq'] ],
+    }
+
+    file { $icp_secret_file:
+      ensure  => file,
+      mode    => '0600',
+      owner   => $user,
+      group   => $user_group,
+      require => Exec['create-icp-org-secret'],
+    }
+
+    # Splice the real secret into the already-rendered deployment.toml
+    # in place, entirely on this node. Puppet's own template() always
+    # renders `secret = ""` (see $resolved_icp_secret above), so the
+    # command text below - which IS shipped to this agent as part of the
+    # catalog - never contains the secret value itself, only file paths;
+    # the secret bytes are read and written locally by awk at apply time.
+    # `unless` keeps this idempotent: it only re-runs when the deployed
+    # file doesn't already carry the current secret (e.g. right after
+    # Puppet's file resource re-rendered deployment.toml from scratch).
+    # This exec runs as root, so the .tmp file it creates would otherwise
+    # land with root ownership and a umask-dependent mode; chown/chmod are
+    # applied to the .tmp file BEFORE the rename so the swap-in is always
+    # atomic and deployment.toml never ends up with the wrong owner/mode
+    # (matching the same $user/$user_group/0644 the file resource below
+    # already manages it as).
+    exec { 'inject-icp-secret':
+      command => "awk -v s=\"$(cat ${icp_secret_file})\" '{ if (\$0 ~ /^secret = /) print \"secret = \\\"\" s \"\\\"\"; else print }' ${install_path}/${deployment_toml_template} > ${install_path}/${deployment_toml_template}.tmp && chown ${user}:${user_group} ${install_path}/${deployment_toml_template}.tmp && chmod 0644 ${install_path}/${deployment_toml_template}.tmp && mv ${install_path}/${deployment_toml_template}.tmp ${install_path}/${deployment_toml_template}",
+      unless  => "grep -qF \"secret = \\\"$(cat ${icp_secret_file})\\\"\" ${install_path}/${deployment_toml_template}",
+      path    => '/usr/bin:/bin',
+      require => [ File[$icp_secret_file], File["${install_path}/${deployment_toml_template}"] ],
+    }
+  }
+
   # 6. Templates --------------------------------------------------------------
   file { "${install_path}/${start_script_template}":
     ensure  => file,
@@ -141,6 +233,7 @@ class micro_integrator (
     group   => $user_group,
     mode    => '0754',
     content => template("${module_name}/mi-home/${start_script_template}.erb"),
+    require => File[$install_path],
   }
 
   file { "${install_path}/${deployment_toml_template}":
@@ -149,6 +242,7 @@ class micro_integrator (
     group   => $user_group,
     mode    => '0644',
     content => template("${module_name}/mi-home/${deployment_toml_template}.erb"),
+    require => File[$install_path],
   }
 
   # 7. systemd unit -----------------------------------------------------------
